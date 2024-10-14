@@ -30,7 +30,7 @@ MOUNT_DIR = "/root/ai-toolkit/modal_output"  # modal_output, due to "cannot moun
 
 # define modal app
 image = (
-    modal.Image.debian_slim(python_version="3.11")
+    modal.Image.from_registry("nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.11") # fix CUDA_Home issue
     # install required system and pip packages, more about this modal approach: https://modal.com/docs/examples/dreambooth_app
     .apt_install("libgl1", "libglib2.0-0")
     .pip_install(
@@ -106,9 +106,12 @@ def print_end_message(jobs_completed, jobs_failed):
     # more about modal GPU's: https://modal.com/docs/guide/gpu
     gpu="A100", # gpu="H100"
     # more about modal timeouts: https://modal.com/docs/guide/timeouts
-    timeout=7200  # 2 hours, increase or decrease if needed
+    timeout=7200,  # 2 hours, increase or decrease if needed
+    secrets=[modal.Secret.from_name("my-huggingface-secret")], # load secret
 )
 def main(config_file_list_str: str, recover: bool = False, name: str = None):
+    print("======== HF_TOKEN:")
+    print(os.environ["HF_TOKEN"])
     # convert the config file list from a string to a list
     config_file_list = config_file_list_str.split(",")
 
